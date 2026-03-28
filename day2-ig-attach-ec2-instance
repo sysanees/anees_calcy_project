@@ -1,0 +1,71 @@
+##lets attach internet gw wqith the main rtb
+  ##create a new file a6-ig-vpc.tf copy from line 3 till line 19
+  #we need to call the default rtb
+data "aws_route_table" "default" {
+  vpc_id =  aws_vpc.sky_vpc.id
+  filter  {
+    name   = "association.main"
+    values = ["true"]
+  } 
+}
+#the above mentioned block will fetch the default route table 
+##add reoute to the default route table to allow internet access to the subnet
+resource "aws_route" "default_route" {
+  route_table_id         = data.aws_route_table.default.id #this is the default route table id which we have fetched in the above block
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.gw.id #this is the internet gateway id which we have created in the a3.ig.tf file
+} 
+
+##0.0.0.0-IGW
+
+  #################lets call the data file for ami 
+  ##creat a new file a5-ami.tf add line 23 till 43
+  data "aws_ami" "amazon_linux" {
+
+  most_recent      = true
+ 
+  owners           = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+#######################open ec2.tf file delete everything copy from line 45 till 64 change my name to your name in lne 62 also change the key pair name which you have already created in console
+  resource "aws_instance" "ec2_instance" { #this is the resource group refrence block
+#the resource is being pointed inside your tfstate file 
+  ami           = data.aws_ami.amazon_linux.id #this is the data block refrence for the ami id
+  instance_type = "t2.micro"
+  subnet_id = values(aws_subnet.sky_subnet)[0].id #this is the subnet id refrence block
+  vpc_security_group_ids = [ aws_security_group.web_sg.id ]
+  key_name = "gopal"
+  associate_public_ip_address = true  
+  user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              yum install httpd -y
+              systemctl start httpd
+              systemctl enable httpd
+              echo "Welcome to terraform test from $HOSTNAME" > /var/www/html/index.html
+              EOF
+  tags = {
+    Name = "Gopal-skyrocket-ec2"
+  }
+}
+#####once the ec2 instance is created we need to display the public ip of the instance
+  ##create a file ec2-output.tf
+  output "instance_public_ip" {
+  value = aws_instance.ec2_instance.public_ip
+}
+
+  

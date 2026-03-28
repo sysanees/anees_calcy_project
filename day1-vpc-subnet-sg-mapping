@@ -1,0 +1,64 @@
+##lets creaste a file vpc.tf dont forget to change my name to your name copy from line 2 till 9
+  resource "aws_vpc" "sky_vpc" {
+  cidr_block       = "10.0.0.0/16"
+  instance_tenancy = "default"
+
+  tags = {
+    Name = "gopal-vpc"
+  }
+}
+
+#####lets create the subnet subnet.tf copy from line 13 till 21 
+  #we need to create the subnet and map it with the vpc
+resource "aws_subnet" "sky_subnet" {
+  vpc_id     = aws_vpc.sky_vpc.id #this subnet need to map with my vpc
+  #awsvpc-refrencebloc-id
+  cidr_block = "10.0.1.0/24"
+
+  tags = {
+    Name = "gopal-subnet"
+  }
+}
+
+###lets create sg.tf copy from line 24 till 52
+  resource "aws_security_group" "web_sg" {
+  # ... other configuration ...
+######allow ssh access from anywhere
+    name        = "web-sg-gopal"
+    vpc_id = aws_vpc.sky_vpc.id
+  ingress {
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  ####allow http access from anywhere
+  ingress {
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+##outbound rule to allow all traffic
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+}
+}
+
+###finally do 
+  terraform plan
+  terraform apply 
+  ###check the same in aws console
+  terraform destroy
+
+  #if you want to see the mapping using a graph
+  terraform graph
+  ##open this site and paste all the content 
+  https://dreampuf.github.io/GraphvizOnline/
+  ##past the content

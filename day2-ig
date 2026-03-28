@@ -1,0 +1,8 @@
+#create a new file a3.ig.tf add this then do terraform apply
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.sky_vpc.id
+
+  tags = {
+    Name = "main"
+  }
+}

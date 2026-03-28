@@ -1,0 +1,54 @@
+##using terraform we will create an ec2 instance and look into the workflow
+  ##lets create a folder in the desktop
+  #3open visual studio code click on file select desktop and open folder. 
+  #click on the + icon give the file name as provider.tf
+  #the provider is aws 
+  #inside the provider.tf file add this 
+  ##using terraform we will create instance in aaws
+
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0" 
+    }
+  }
+}
+
+# Configure the AWS Provider
+provider "aws" {
+  region = "us-east-1"
+}
+
+###now lets create the ec2 instance i will create a new file 
+  ec2.tf
+  ###inside this file add line number 26 till 30
+  resource "aws_instance" "ec2" {
+  ami                     = "ami-0dcc1e21636832c5d"
+  instance_type           = "t2.micro"
+  
+}
+
+#then do
+  terraform init
+  ##this will create a .terraform folder inside that it will download the plugin
+###lets modify the ec2.tf file delete everything add from line number 36 till 42 change line 40 my name to your name 
+resource "aws_instance" "ec2" {
+  ami           = "ami-0ec10929233384c7f"
+  instance_type = "t2.micro"
+  tags = {
+    Name = "Gopal-skyrocket-ec2"
+  }
+}
+##after this 
+terraform validate
+##this will do just syntax validation
+terraform fmt
+##this will format your code remove extra spaces
+terraform plan
+#####this will do a dry run what it will create
+terraform apply 
+##this will create the resource and resource information is stored inside the state file
+terraform destroy
+##it will read the state file and destroy the resource 
+##then again check the state file did it had the content or everything is blank

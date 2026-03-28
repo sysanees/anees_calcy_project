@@ -1,0 +1,28 @@
+##lets delete some files and folder from your project folder
+  ##before that do terraform destroy
+  terraform destroy
+  #############################################
+  ##then delete folder 
+  .terraform 
+  terraform.tfstate
+  terraform.tfstate.backup
+  .terraform.lock.hcl
+  ###then go to amazon search for s3
+#give a unique name to your bucket and enable versioing
+##once done open dynamodb
+create a table
+primary key need to be define LockID
+#create a new file a7.backend.tf replace the name of the bucket replace the dynamodb table name
+terraform {
+  backend "s3" {
+    bucket = "terraform-remote-gopal" #replace with your s3 bucket name
+    key = "terraform.tfstate" ##this is the file name which will be created in the s3 bucket to store the tfstate file
+    region = "us-east-1"
+    dynamodb_table = "gopal-terraform-lock" #replace with your dynamodb table name which will be used for state locking
+    encrypt = true
+  }
+}
+
+###after this again we need to do 
+terraform init
+terraform apply

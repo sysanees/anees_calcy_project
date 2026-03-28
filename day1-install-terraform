@@ -1,0 +1,15 @@
+##you need to open powershell in admin mode 
+  ##then install choco package manager
+  Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+  ##then refreshenv
+  refreshenv
+  ###lets install git terraform vscode aws-cli
+  choco install terraform
+  choco install git
+  choco install vscode
+  choco install awscli
+  ###once installation complete we can verify the same you need to reboot the machine
+  aws --version
+   terraform --version
+  ##git you can check from the startup vs code is also there 
+  ##finally reboot the vm

@@ -1,0 +1,44 @@
+##go to ec2.tf at the starting put /* and ending */
+  ##as instance will be created using autoscaling this autoscaling geet attached with your lb so we need to disable 
+  ####b5.tg-instance.tf #put /* and ending */
+  #disable the ec2-output.tf /* ending */
+  ##lets create c1-ec2-templates.tf copy from line number 6 till 21 also change the name of the template in line 7 then do terraform apply
+  resource "aws_launch_template" "ec2_instance" {
+  name_prefix   = "gopal-web-launch-template"
+  image_id      = data.aws_ami.amazon_linux.id
+  instance_type = var.instance_type["test"]
+
+  key_name               = "gopal"
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+ user_data = base64encode(<<EOF
+#!/bin/bash
+yum install httpd -y
+systemctl start httpd
+systemctl enable httpd
+echo "Hello from Auto Scaling" > /var/www/html/index.html
+EOF
+)
+}
+
+  #lets create the autoscaling group c2.autoscaling.tf
+resource "aws_autoscaling_group" "web" {
+  desired_capacity = 2
+  max_size         = 4
+  min_size = 2 #it should create two instances at the time of creation of autoscaling group and it can scale up to 4 instances and it will not scale down below 2 instances
+  name              = "gopal-autoscaling-group"
+  #i want that the instance should be deployed in two az 
+  vpc_zone_identifier = values(aws_subnet.sky_subnet)[*].id #this is the subnet where the autoscaling group will be created
+  target_group_arns = [ aws_lb_target_group.app_tg.arn ]
+  health_check_type = "ELB" #this is the health check type for the autoscaling group
+    launch_template {
+        id      = aws_launch_template.ec2_instance.id
+        version = "$Latest"
+    }
+   tag {
+     key                 = "Name"
+     value               = "gopal-autoscaling-group"
+     propagate_at_launch = true
+   
+  }
+}
+

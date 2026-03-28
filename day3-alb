@@ -1,0 +1,55 @@
+#lets create the alb: application load balancer
+  #create a file a3.alb.tf copy line 3 till 11 . need to change my name to your name in line 4 and line 10
+  resource "aws_alb" "app_lb" {
+  name = "gopal-alb"
+  load_balancer_type = "application"
+  #with this lb we need to add security group and subnet
+  security_groups = [aws_security_group.alb_sg.id] #this is the security
+  subnets = values(aws_subnet.sky_subnet)[*].id #this is the subnet
+  tags = {
+    Name = "gopal-alb"
+  }
+}
+###lets create the target group b4.target-group.tf copy from line 14 till 31 
+resource "aws_lb_target_group" "app_tg" {
+  name     = "gopal-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.sky_vpc.id # Reference a specific VPC ID
+
+  health_check {
+    enabled             = true #from here you can enable or disable health check
+    interval            = 30 #every 30 second it will check the health of ec2 instance
+    path                = "/" #in the root path
+    #path                = "/app" #if you have a specific health check endpoint`
+    protocol            = "HTTP"
+    timeout             = 5
+    healthy_threshold   = 3 #if 3 consecutive health check is successful then it will consider the instance as healthy
+    unhealthy_threshold = 3 #if 3 consecutive health check is failed then it will consider the instance as unhealthy
+    matcher             = "200-299" #if the health check response code is between 200 and 299 then it will consider the instance as healthy
+  }
+}
+#we need to attach the target group with the alb create a file b5.tg-instance.tf add line 34 till 39
+#finally behind the target group i need to attach all my instances
+resource "aws_lb_target_group_attachment" "web" {
+  for_each = aws_instance.ec2_instance
+  target_group_arn = aws_lb_target_group.app_tg.arn
+  target_id        = each.value.id
+  port = 80
+}
+#lets add the listener which is sending the traffic to target group
+##creae a file b6.alb-listener.tf
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_alb.app_lb.arn #this listener will be attached to the alb
+  port               = 80 #listener will listen on port 80
+  protocol           = "HTTP" #listener will use HTTP protocol
+#the default action is to forward the traffic to the target group
+  default_action {
+    target_group_arn = aws_lb_target_group.app_tg.arn
+    type             = "forward"
+  }
+}
+##lets create another file so that we can displaye the alb dns name a7.alb-output.tf
+output "alb_dns" {
+  value = aws_alb.app_lb.dns_name
+}

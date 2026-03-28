@@ -1,0 +1,16 @@
+##lets create a new map varaibles file a6.instance-type-varaibles.tf inside that copy from line 2 till line 9
+  variable "instance_type" {
+  type = map(string)
+  default = {
+    "dev" = "t2.micro"
+    "test"  = "t2.small"
+    "prod"  = "t3.medium"
+  }
+}
+
+###lets move to ec2.tf
+ # on line 6 change the instance type currently it is hardcoded with t3.micro instance with this line
+  instance_type = var.instance_type["dev"] 
+  #after this do terraform plan this will show the instance type check in the plan t2.micro instance
+  ##replace then change it to prod check the instance type using terraform plan command
+  ##fiunally change the environment to dev after that do terraform plan check the instance type

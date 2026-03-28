@@ -1,0 +1,66 @@
+##lets create a new varaibles file
+  a1.varaibles.tf
+  ################ inside that copy from line 4 till 25
+  variable "region" {
+  type = string #list of string map or string
+  #in string varaible we can provide a single string value
+  description = "The AWS region to create resources in"
+  default = "us-east-1" #input value for the variable if we are not providing any value then it will take this default value
+}
+
+variable "vpc_cidr" {
+  type = string #no default value provided for this variable so it will be mandatory to provide a value for this variable when we run terraform apply command
+  description = "The CIDR block for the VPC"
+  default = "10.0.0.0/16"
+}
+
+variable "azs" {
+  type = list(string)
+  default = [ "us-east-1a", "us-east-1b" , "us-east-1c", "us-east-1d"]
+}
+
+variable "subnet_cidrs" {
+  type = list(string)
+  default = [ "10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24" , "10.0.4.0/24" ]
+}
+###lets modify the vpc.tf delete copy from line 28 till 35 everythign change my name to your name 
+  
+resource "aws_vpc" "sky_vpc" {
+  cidr_block       = var.vpc_cidr
+  instance_tenancy = "default"
+
+  tags = {
+    Name = "gopal-vpc"
+  }
+}
+######lets modify the subnet.tf file delete everything and add this 
+  #we need to create the subnet and map it with the vpc
+resource "aws_subnet" "sky_subnet" {
+  vpc_id     = aws_vpc.sky_vpc.id #this subnet need to map with my vpc
+  #awsvpc-refrencebloc-id
+for_each =  zipmap(var.azs, var.subnet_cidrs) #it will create 3 subnet in 3 different availability zone with the respective cidr block
+availability_zone = each.key #it will pick up the az
+cidr_block        = each.value #it will pick up the subnet cidr block
+map_public_ip_on_launch = true
+  tags = {
+    Name = "gopal-public-subnet-${each.key}" #it will create the name of the subnet with the respective availability zone
+  }
+}
+
+##change my name to your name
+  #modify provider.tf file delete everything and add this 
+  ##using terraform we will create instance in aaws
+#provider will be aws
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+}
+
+# Configure the AWS Provider
+provider "aws" {
+  region = var.region #here also we are calling region
+}

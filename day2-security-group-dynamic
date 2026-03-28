@@ -1,0 +1,44 @@
+##cresate a varaible file a4.sg-variables.tf
+  
+  variable "allowed_ingress_ports" {
+  type        = list(number)
+  default     = [22, 80, 443]
+  description = "List of allowed ingress ports for the security group"
+
+}
+
+variable "allowed_cidr_blocks" {
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+  description = "List of allowed CIDR blocks for ingress rules"
+
+}
+#once created replace the sg.tf with this and change my name to your name after that do terrform apply 
+  resource "aws_security_group" "web_sg" {
+  # ... other configuration ...
+  ######allow ssh access from anywhere
+  name   = "web-sg-gopal"
+  vpc_id = aws_vpc.sky_vpc.id
+ 
+  # ... other configuration ...
+
+  dynamic "ingress" {
+    for_each = var.allowed_ingress_ports
+    content {
+      description = "Allow ingress on port ${ingress.value}"
+      from_port   = ingress.value
+      to_port     = ingress.value
+      protocol    = "tcp"
+      cidr_blocks = var.allowed_cidr_blocks 
+    }
+  }
+    egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1" #tcp, udp, icmp and all
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+}
+
